@@ -4,8 +4,10 @@ const connectDB = require("./db/connect");
 require("dotenv").config();
 
 const app = express();
+
 const port = process.env.PORT || 8000;
 
+// Middleware
 app.use(express.json());
 
 // Routes
