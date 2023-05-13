@@ -42,6 +42,7 @@ const registerUser = async (req, res) => {
 
 /////////////////////////////////
 //////// Login User Controller
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -74,7 +75,21 @@ const loginUser = async (req, res) => {
   res.json({ token });
 };
 
+/////////////////////////////////
+//////// Get all users
+
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  getUsers,
 };
