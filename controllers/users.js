@@ -88,8 +88,66 @@ const getUsers = async (req, res) => {
   }
 };
 
+/////////////////////////////////
+//////// Create a new user
+
+const createUser = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    console.log(username);
+    // Check if the required fields are present
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Please provide all required fields" });
+    }
+
+    // Check if the email is already in use
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: "Email already in use" });
+    }
+
+    // Hash the password before saving to the database
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user object and save it to the database
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role: "user",
+    });
+
+    const savedUser = await user.save();
+
+    // Generate a JWT token and send it in the response
+    const payload = {
+      userId: savedUser._id,
+      role: savedUser.role,
+      timestamp: Date.now(),
+    };
+    const token = jwt.sign(payload, "secret", { expiresIn: "1h" });
+
+    res.json({
+      token,
+      user: {
+        id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        role: savedUser.role,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUsers,
+  createUser,
 };
