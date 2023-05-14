@@ -145,9 +145,80 @@ const createUser = async (req, res) => {
   }
 };
 
+/////////////////////////////////
+//////// Get a user by their id
+
+const getUserByID = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the user is authorized to access the resource
+    if (req.user.role !== "admin" && req.user.userId !== user._id.toString()) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+///////////////////////////////////////
+//////// Update the user details
+
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { username, email, role } = req.body;
+
+  // Check if the authenticated user has admin role or the user's ID matches the request
+  if (req.user.role !== "admin" && req.user.id !== id) {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
+  // Update the user details
+  User.findByIdAndUpdate(id, { username, email, role }, { new: true })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      return res.json(user);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: "Server error" });
+    });
+};
+
+///////////////////////////////////////
+//////// Delete a user
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUsers,
   createUser,
+  getUserByID,
+  updateUser,
+  deleteUser,
 };
